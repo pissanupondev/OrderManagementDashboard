@@ -1,0 +1,57 @@
+@if (errorService.isOpen()) {
+  <!-- Backdrop Background สำหรับทำฉากหลังมืด -->
+  <div 
+    class="modal-backdrop fade show"
+    (click)="onClose()">
+  </div>
+
+  <!-- Bootstrap Modal Dialog -->
+  <div 
+    class="modal d-block fade show" 
+    tabindex="-1" 
+    role="dialog" 
+    aria-labelledby="globalErrorModalTitle"
+    aria-modal="true"
+    (keydown.escape)="onClose()"
+  >
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        
+        <!-- Modal Header (สีแดง Danger) -->
+        <div class="modal-header bg-danger text-white border-0 px-4 py-3">
+          <h5 id="globalErrorModalTitle" class="modal-title fw-bold d-flex align-items-center mb-0">
+            <i class="bi bi-exclamation-octagon-fill me-2 fs-5" aria-hidden="true"></i>
+            แจ้งเตือนข้อผิดพลาด
+          </h5>
+          <button 
+            type="button" 
+            class="btn-close btn-close-white" 
+            aria-label="ปิดหน้าต่าง" 
+            (click)="onClose()">
+          </button>
+        </div>
+
+        <!-- Modal Body (ข้อความแจ้งเตือนภาษาไทย) -->
+        <div class="modal-body p-4 text-center">
+          <div class="mb-3 text-danger">
+            <i class="bi bi-exclamation-triangle-fill display-4" aria-hidden="true"></i>
+          </div>
+          <p class="fs-6 text-dark mb-0 fw-medium">
+            {{ errorService.errorMessage() }}
+          </p>
+        </div>
+
+        <!-- Modal Footer (ปุ่มตกลง/ปิด) -->
+        <div class="modal-footer bg-light border-0 justify-content-center p-3">
+          <button 
+            type="button" 
+            class="btn btn-secondary px-4 py-2 rounded-3 fw-semibold shadow-sm" 
+            (click)="onClose()">
+            ตกลง / ปิด
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

@@ -1,22 +1,19 @@
 import { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
-import { inject } from '@angular/core'; 
+import { inject } from '@angular/core';
 import { throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
-import { GlobalErrorService } from '../services/global-error.service';
+import { GlobalErrorService } from '../../../core/services/global-error.service';
 
 export const errorRetryInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-  // 🟢 Inject GlobalErrorService สำหรับส่งข้อความ Error ไปเปิด Bootstrap Modal
   const globalErrorService = inject(GlobalErrorService);
 
   return next(req).pipe(
-    // 🟢 1. ทำ Retry เฉพาะ HTTP GET Request เมื่อมีปัญหาเรื่องเครือข่าย หรือ Server ขัดข้อง
     // (ไม่ retry บน POST, PUT, PATCH, DELETE เพื่อป้องกันการส่งข้อมูลซ้ำ)
     retry({
       count: req.method === 'GET' ? 2 : 0, // ลองใหม่สูงสุด 2 ครั้ง
       delay: 1000                          // เว้นระยะห่าง 1 วินาที
     }),
 
-    // 🟢 2. ดักจับ Error และแปลงเป็นข้อความภาษาไทย
     catchError((error: HttpErrorResponse) => {
       let userFriendlyMessage = 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ กรุณาลองใหม่อีกครั้ง';
 
@@ -33,11 +30,9 @@ export const errorRetryInterceptor: HttpInterceptorFn = (req: HttpRequest<unknow
       } else if (error.status >= 500) {
         userFriendlyMessage = 'ระบบเซิร์ฟเวอร์ขัดข้อง กรุณาลองใหม่ในภายหลัง';
       }
-
-      // 🟢 3. เรียกใช้งาน GlobalErrorService เพื่อเปิด Bootstrap Error Popup อัตโนมัติ
+      
       globalErrorService.showError(userFriendlyMessage);
 
-      // ส่งต่อ Error ไปยัง Subscriber (ถ้ามี Component ไหนต้องการดักจับเพิ่มเติม)
       return throwError(() => new Error(userFriendlyMessage));
     })
   );
