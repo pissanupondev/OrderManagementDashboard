@@ -1,0 +1,85 @@
+@if (totalPages() > 1) {
+  <div class="pagination-wrapper mt-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+    <!-- ข้อความบอกหน้าปัจจุบัน (อยู่ซ้ายบน Desktop, อยู่กลางบน Mobile) -->
+    <span class="text-muted small pagination-info text-center text-sm-start">
+      หน้า {{ currentPage() }} จาก {{ totalPages() }}
+    </span>
+
+    <!-- Nav ปรับให้ชิดขวาสุดบน Desktop (ms-sm-auto) -->
+    <nav aria-label="Pagination Navigation" class="ms-sm-auto">
+      <!-- ==================== 1. Desktop & Tablet (≥ 576px) ==================== -->
+      <ul class="pagination pagination-sm mb-0 d-none d-sm-flex">
+        <!-- ปุ่มย้อนกลับ -->
+        <li class="page-item" [class.disabled]="currentPage() <= 1">
+          <button
+            type="button"
+            class="page-link"
+            [disabled]="currentPage() <= 1"
+            (click)="onPageChange(currentPage() - 1)">
+            ย้อนกลับ
+          </button>
+        </li>
+
+        <!-- รายการเลขหน้าทั้งหมด -->
+        @for (page of pagesArray(); track page) {
+          <li class="page-item" [class.active]="currentPage() === page">
+            <button
+              type="button"
+              class="page-link"
+              (click)="onPageChange(page)">
+              {{ page }}
+            </button>
+          </li>
+        }
+
+        <!-- ปุ่มถัดไป -->
+        <li class="page-item" [class.disabled]="currentPage() >= totalPages()">
+          <button
+            type="button"
+            class="page-link"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="onPageChange(currentPage() + 1)">
+            ถัดไป
+          </button>
+        </li>
+      </ul>
+
+      <!-- ==================== 2. Mobile (< 576px) ==================== -->
+      <ul class="pagination pagination-sm mb-0 d-flex d-sm-none justify-content-center">
+        <!-- ปุ่มย้อนกลับ -->
+        <li class="page-item" [class.disabled]="currentPage() <= 1">
+          <button
+            type="button"
+            class="page-link"
+            [disabled]="currentPage() <= 1"
+            (click)="onPageChange(currentPage() - 1)">
+            ย้อนกลับ
+          </button>
+        </li>
+
+        <!-- รายการเลขหน้าเฉพาะ 3 หน้า -->
+        @for (page of mobilePagesArray(); track page) {
+          <li class="page-item" [class.active]="currentPage() === page">
+            <button
+              type="button"
+              class="page-link"
+              (click)="onPageChange(page)">
+              {{ page }}
+            </button>
+          </li>
+        }
+
+        <!-- ปุ่มถัดไป -->
+        <li class="page-item" [class.disabled]="currentPage() >= totalPages()">
+          <button
+            type="button"
+            class="page-link"
+            [disabled]="currentPage() >= totalPages()"
+            (click)="onPageChange(currentPage() + 1)">
+            ถัดไป
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+}

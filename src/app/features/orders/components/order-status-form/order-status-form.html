@@ -1,0 +1,44 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="status-form">
+  <div class="form-group">
+    <label for="statusSelect" class="form-label">เลือกสถานะใหม่</label>
+    <select 
+      id="statusSelect" 
+      formControlName="status" 
+      class="form-select"
+      [class.is-invalid]="statusControl?.invalid && (statusControl?.touched || isSubmitted)"
+    >
+      <option value="" disabled>-- กรุณาเลือกสถานะ --</option>
+      <option *ngFor="let opt of statusOptions" [value]="opt.value">
+        {{ opt.label }}
+      </option>
+    </select>
+
+    <div *ngIf="statusControl?.invalid && (statusControl?.touched || isSubmitted)" class="error-msg">
+      <small *ngIf="statusControl?.errors?.['required']">* กรุณาเลือกสถานะ</small>
+      <small *ngIf="statusControl?.errors?.['sameStatus']">* สถานะที่เลือกเป็นสถานะปัจจุบันอยู่แล้ว</small>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="remark" class="form-label">หมายเหตุ (ถ้ามี)</label>
+    <textarea 
+      id="remark" 
+      formControlName="remark" 
+      rows="3" 
+      class="form-control"
+      placeholder="ระบุเหตุผลการเปลี่ยนสถานะ..."
+    ></textarea>
+    <div *ngIf="remarkControl?.invalid && (remarkControl?.touched || isSubmitted)" class="error-msg">
+      <small *ngIf="remarkControl?.errors?.['maxlength']">* หมายเหตุต้องไม่เกิน 200 ตัวอักษร</small>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isLoading">
+      ยกเลิก
+    </button>
+    <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+      {{ isLoading ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง' }}
+    </button>
+  </div>
+</form>

@@ -1,0 +1,15 @@
+.pagination-wrapper {
+  width: 100%;
+}
+
+/* จัดระยะห่างสำหรับจอ Mobile (< 576px) */
+@media (max-width: 575.98px) {
+  .pagination-info {
+    text-align: center;
+  }
+
+  .pagination .page-link {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+  }
+}

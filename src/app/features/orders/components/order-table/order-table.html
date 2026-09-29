@@ -1,0 +1,106 @@
+<!-- สถานะกำลังโหลดข้อมูล (Loading State) -->
+@if (isLoading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">กำลังโหลด...</span>
+    </div>
+    <p class="mt-2 text-muted">กำลังโหลดข้อมูลรายการสั่งซื้อ...</p>
+  </div>
+} @else {
+  <!-- แสดงผลเป็น Table บนหน้าจอ Desktop (1440px) และ Tablet (768px) -->
+  <div class="table-responsive d-none d-md-block">
+    <table class="table table-bordered table-striped align-middle custom-table">
+      <thead>
+        <tr class="text-center">
+          <th scope="col" class="text-center">ลำดับ</th>
+          <th scope="col">ร้าน</th>
+          <th scope="col" class="text-center">สถานะสินค้า</th>
+          <th scope="col" class="text-center">วันที่สั่งซื้อ</th>
+          <th scope="col">หมายเลขสั่งซื้อ</th>
+          <th scope="col">รายการ</th>
+          <th scope="col">ตัวเลือกสินค้า</th>
+          <th scope="col" class="text-end">จำนวน</th>
+          <th scope="col" class="text-end">ยอดรวม</th>
+          <th scope="col" class="text-end">ค่าจัดส่ง</th>
+          <th scope="col" class="text-end">ส่วนลด</th>
+          <th scope="col" class="text-end">รวมสุทธิ</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of orders(); track item.no) {
+          <!-- 🟢 เพิ่ม (click) และ style cursor: pointer -->
+          <tr 
+            (click)="onSelectOrder(item)" 
+            class="clickable-row" 
+            style="cursor: pointer;"
+            title="คลิกเพื่ออัปเดตสถานะ"
+          >
+            <td class="text-center">{{ item.no }}</td>
+            <td>{{ item.shopName }}</td>
+            <td class="text-center">
+              <span class="badge" [ngClass]="getStatusClass(item.status)">{{ item.status }}</span>
+            </td>
+            <td class="text-center">{{ item.orderDate | thaiDate }}</td>
+            <td>{{ item.orderNo }}</td>
+            <td>{{ item.productName }}</td>
+            <td>{{ item.variant }}</td>
+            <td class="text-end">{{ item.quantity | number:'1.2-2' }}</td>
+            <td class="text-end">{{ item.totalAmount | number:'1.2-2' }}</td>
+            <td class="text-end">{{ item.shippingFee | number:'1.2-2' }}</td>
+            <td class="text-end">{{ item.discount | number:'1.2-2' }}</td>
+            <td class="text-end fw-bold">{{ item.netTotal | number:'1.2-2' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="12" class="text-center py-4 text-muted">ไม่พบข้อมูลรายการสั่งซื้อ</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- แสดงผลเป็น Card View บนหน้าจอมือถือขนาดเล็ก (360px) -->
+  <div class="d-md-none">
+    @for (item of orders(); track item.no) {
+      <!-- 🟢 เพิ่ม (click) และ style cursor: pointer ที่ระดับ Card -->
+      <div 
+        class="card mb-3 shadow-sm border-0 clickable-card" 
+        (click)="onSelectOrder(item)" 
+        style="cursor: pointer;"
+      >
+        <div class="card-header bg-custom-header text-white d-flex justify-content-between align-items-center">
+          <span class="fw-bold">ร้าน - {{ item.shopName }}</span>
+          <span class="badge" [ngClass]="getStatusClass(item.status)">{{ item.status }}</span>
+        </div>
+        <div class="card-body">
+          <h6 class="card-title text-primary fw-bold mb-2">{{ item.productName }}</h6>
+          <p class="card-text text-muted small mb-2">
+            <strong>ตัวเลือกสินค้า:</strong> {{ item.variant }}
+          </p>
+          <hr class="my-2">
+          <div class="row g-2 small">
+            <div class="col-12"><strong>หมายเลขสั่งซื้อ:</strong> {{ item.orderNo }}</div>
+            <div class="col-12"><strong>วันที่สั่งซื้อ:</strong> {{ item.orderDate | thaiDate }}</div>
+
+            <div class="col-6"><strong>จำนวน:</strong> {{ item.quantity | number:'1.2-2' }}</div>
+            <div class="col-6"><strong>ยอดรวม:</strong> {{ item.totalAmount | number:'1.2-2' }} บาท</div>
+            <div class="col-6"><strong>ค่าจัดส่ง:</strong> {{ item.shippingFee | number:'1.2-2' }} บาท</div>
+            <div class="col-6"><strong>ส่วนลด:</strong> {{ item.discount | number:'1.2-2' }} บาท</div>
+          </div>
+        </div>
+        <div class="card-footer bg-light text-end">
+          <span class="fw-bold text-dark">รวมสุทธิ: </span>
+          <span class="fw-bold text-success fs-6">{{ item.netTotal | number:'1.2-2' }} บาท</span>
+        </div>
+      </div>
+    } @empty {
+      <div class="text-center py-4 text-muted">ไม่พบข้อมูลรายการสั่งซื้อ</div>
+    }
+  </div>
+
+  <app-pagination 
+    [currentPage]="currentPage()" 
+    [totalPages]="totalPages()" 
+    (pageChange)="pageChange.emit($event)">
+  </app-pagination>
+}

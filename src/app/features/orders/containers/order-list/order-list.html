@@ -1,0 +1,34 @@
+<main class="container-fluid px-2 px-md-4 py-3">
+  <header class="mb-3">
+    <h1 class="h4 fw-bold mb-0">ประวัติและรายการสั่งซื้อ</h1>
+  </header>
+
+  <app-order-filter 
+    (filterChange)="onFilterChange($event)" 
+    (resetFilter)="onFilterReset()">
+  </app-order-filter>
+
+  <div class="summary-card my-4 text-end">
+    <span>ยอดรวมสุทธิทั้งหมด (ตามเงื่อนไขค้นหา): </span>
+    <strong>{{ totalNetAmount() | number:'1.2-2' }} THB</strong>
+  </div>
+
+  <!-- 🟢 ดักฟัง (editStatus) เพื่อเรียก onOpenStatusModal($event) -->
+  <app-order-table 
+    [orders]="displayedOrders()" 
+    [isLoading]="isLoading()" 
+    [currentPage]="currentPage()"
+    [totalPages]="totalPages()" 
+    (pageChange)="onPageChange($event)"
+    (editStatus)="onOpenStatusModal($event)">
+  </app-order-table>
+
+  <!-- 🟢 แสดง Modal Form เมื่อกดเลือก Record -->
+  <app-order-status-modal
+    [isOpen]="isModalOpen()"
+    [order]="selectedOrder()"
+    [isLoading]="isUpdatingStatus()"
+    (save)="onSaveStatus($event)"
+    (close)="onCloseStatusModal()">
+  </app-order-status-modal>
+</main>

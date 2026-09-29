@@ -1,0 +1,25 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <h4 class="modal-title">อัปเดตสถานะคำสั่งซื้อ</h4>
+      <button class="btn-close" (click)="onClose()">&times;</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body" *ngIf="order">
+      <div class="order-info">
+        <p><strong>หมายเลขคำสั่งซื้อ:</strong> #{{ order.orderNo }}</p>
+        <p><strong>ชื่อลูกค้า:</strong> {{ order.shopName }}</p>
+      </div>
+
+      <!-- Reuse Component Form -->
+      <app-order-status-form
+        [currentStatus]="order.status"
+        [isLoading]="isLoading"
+        (formSubmit)="onFormSubmit($event)"
+        (formCancel)="onClose()"
+      ></app-order-status-form>
+    </div>
+  </div>
+</div>

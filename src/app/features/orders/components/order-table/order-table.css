@@ -1,0 +1,121 @@
+/* โทนสีส่วนหัวของตารางตรงตามรูปภาพ (Dark Navy Blue) */
+.custom-table thead th,
+.bg-custom-header {
+  background-color: #1e3a5f !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.custom-table td {
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+/* ==========================================
+   Interactive Row & Card Styles (คลิกเลือก Record)
+   ========================================== */
+
+.clickable-row,
+.clickable-card {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out, transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Hover effect สำหรับ Table Row (รวม Sticky Columns) */
+.clickable-row:hover,
+.clickable-row:hover > td,
+.clickable-row:hover > td:nth-child(1),
+.clickable-row:hover > td:nth-child(2),
+.clickable-row:hover > td:nth-child(3) {
+  background-color: #e8f4ff !important; /* เปลี่ยนสีพื้นหลังแถวเมื่อเอาเมาส์ไปชี้ */
+}
+
+/* Hover effect สำหรับ Mobile Card View */
+.clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ==========================================
+   Fix Sticky Columns (ลำดับ, ร้าน, สถานะสินค้า)
+   ========================================== */
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* คอลัมน์ที่ 1: ลำดับ */
+.custom-table th:nth-child(1),
+.custom-table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background-color: #ffffff;
+  width: 70px;
+  min-width: 70px;
+}
+
+/* คอลัมน์ที่ 2: ร้าน */
+.custom-table th:nth-child(2),
+.custom-table td:nth-child(2) {
+  position: sticky;
+  left: 70px;
+  z-index: 2;
+  background-color: #ffffff;
+  min-width: 150px;
+}
+
+/* คอลัมน์ที่ 3: สถานะสินค้า (ตรึงถึงคอลัมน์นี้) */
+.custom-table th:nth-child(3),
+.custom-table td:nth-child(3) {
+  position: sticky;
+  left: 220px; /* 70px + 150px */
+  z-index: 2;
+  background-color: #ffffff;
+  min-width: 130px;
+  box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.15); /* เพิ่มเงาด้านขวาเพื่อให้เห็นขอบชัดเจน */
+}
+
+/* กำหนด background และ z-index สำหรับ thead ให้ตรงกับโทนสี Dark Navy Blue */
+.custom-table thead th:nth-child(1),
+.custom-table thead th:nth-child(2),
+.custom-table thead th:nth-child(3) {
+  z-index: 3;
+  background-color: #1e3a5f !important;
+  color: #ffffff !important;
+}
+
+/* รักษาสีพื้นหลังแบบสลับแถบ (Striped) สำหรับ 3 คอลัมน์แรก */
+.table-striped > tbody > tr:nth-of-type(odd) > td:nth-child(1),
+.table-striped > tbody > tr:nth-of-type(odd) > td:nth-child(2),
+.table-striped > tbody > tr:nth-of-type(odd) > td:nth-child(3) {
+  background-color: #f8f9fa;
+}
+
+/* ==========================================
+   รองรับ Responsive Breakpoints
+   ========================================== */
+
+/* สำหรับหน้าจอ 360px */
+@media (max-width: 575.98px) {
+  .container-fluid {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* สำหรับหน้าจอ Tablet 768px */
+@media (min-width: 768px) and (max-width: 1439.98px) {
+  .custom-table {
+    font-size: 0.85rem;
+  }
+}
+
+/* สำหรับหน้าจอ Desktop 1440px */
+@media (min-width: 1440px) {
+  .container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
