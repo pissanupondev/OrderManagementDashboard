@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { OrderItem } from '../models/order.model';
+import { OrderItem, PaginationParams } from '../models/order.model';
 import { MOCK_ORDERS } from '../mocks/order.mock';
 
 @Injectable({
@@ -11,28 +11,41 @@ import { MOCK_ORDERS } from '../mocks/order.mock';
 export class OrderService {
   private http = inject(HttpClient);
   private isMockMode = true; 
+  
+  getOrders(params: PaginationParams = {}): Observable<OrderItem[]> {
+  const { search = '', status = '', page = 1 } = params;
 
- getOrders(query: string = ''): Observable<OrderItem[]> {
-    if (this.isMockMode) {
-      const trimmedQuery = query.trim().toLowerCase();
-      const filtered = trimmedQuery
-        ? MOCK_ORDERS.filter(item =>
-            item.orderNo.toLowerCase().includes(trimmedQuery) ||
-            item.shopName?.toLowerCase().includes(trimmedQuery) ||
-            item.productName?.toLowerCase().includes(trimmedQuery)
-          )
-        : MOCK_ORDERS;
+  if (this.isMockMode) {
+    const trimmedQuery = search.trim().toLowerCase();
+    const pageSize = 10;
 
-      return of(filtered).pipe(delay(400));
-    }
+    const filtered = MOCK_ORDERS.filter(item => {
+      const matchesSearch = !trimmedQuery || (
+        item.orderNo?.toLowerCase().includes(trimmedQuery) ||
+        item.shopName?.toLowerCase().includes(trimmedQuery) ||
+        item.productName?.toLowerCase().includes(trimmedQuery)
+      );
 
-    // Interceptor จะจัดการ Retry และ Error Handling ให้สะดวกรวดเร็ว
-    return this.http.get<OrderItem[]>('/api/orders', { params: { search: query } });
+      const matchesStatus = !status || item.status === status;
+
+      return matchesSearch && matchesStatus;
+    });
+
+    const startIndex = (page - 1) * pageSize;
+    const paginatedItems = filtered.slice(startIndex, startIndex + pageSize);
+
+    return of(paginatedItems).pipe(delay(400));
   }
 
-  /**
-   * อัปเดตสถานะรายการสั่งซื้อ
-   */
+  return this.http.get<OrderItem[]>('/api/orders', {
+    params: {
+      search,
+      status,
+      page: page.toString()
+    }
+  });
+ }
+  
   updateOrderStatus(orderNo: string, newStatus: string): Observable<OrderItem> {
     if (this.isMockMode) {
       const targetOrder = MOCK_ORDERS.find(

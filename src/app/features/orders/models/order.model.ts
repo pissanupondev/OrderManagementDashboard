@@ -30,3 +30,9 @@ export interface StatusFormPayload {
   status: string;
   remark?: string;
 }
+
+export interface PaginationParams {
+  search?: string;
+  status?: string;
+  page?: number;
+}
