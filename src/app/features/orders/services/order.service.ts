@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { OrderItem } from '../models/order.model';
 import { MOCK_ORDERS } from '../mocks/order.mock';
@@ -9,29 +9,44 @@ import { MOCK_ORDERS } from '../mocks/order.mock';
   providedIn: 'root'
 })
 export class OrderService {
- private http = inject(HttpClient);
+  private http = inject(HttpClient);
   private isMockMode = true; 
 
-  getOrders(): Observable<OrderItem[]> {
+ getOrders(query: string = ''): Observable<OrderItem[]> {
     if (this.isMockMode) {
-      return of(MOCK_ORDERS).pipe(delay(400));
+      const trimmedQuery = query.trim().toLowerCase();
+      const filtered = trimmedQuery
+        ? MOCK_ORDERS.filter(item =>
+            item.orderNo.toLowerCase().includes(trimmedQuery) ||
+            item.shopName?.toLowerCase().includes(trimmedQuery) ||
+            item.productName?.toLowerCase().includes(trimmedQuery)
+          )
+        : MOCK_ORDERS;
+
+      return of(filtered).pipe(delay(400));
     }
-    return this.http.get<OrderItem[]>('/api/orders');
+
+    // Interceptor จะจัดการ Retry และ Error Handling ให้สะดวกรวดเร็ว
+    return this.http.get<OrderItem[]>('/api/orders', { params: { search: query } });
   }
 
+  /**
+   * อัปเดตสถานะรายการสั่งซื้อ
+   */
   updateOrderStatus(orderNo: string, newStatus: string): Observable<OrderItem> {
     if (this.isMockMode) {
-      const targetOrder = MOCK_ORDERS.find(item => item.orderNo === orderNo || String(item.no) === orderNo);
-      
+      const targetOrder = MOCK_ORDERS.find(
+        item => item.orderNo === orderNo || String(item.no) === orderNo
+      );
+
       if (targetOrder) {
         targetOrder.status = newStatus;
         return of({ ...targetOrder }).pipe(delay(500));
       }
-      
-      throw new Error('ไม่พบรายการสั่งซื้อที่ระบุ');
+
+      return throwError(() => new Error('ไม่พบรายการสั่งซื้อที่ระบุ'));
     }
 
-    // กรณีต่อกับ API จริง (ปรับ URL ตามโครงสร้าง Backend ของคุณ)
     return this.http.patch<OrderItem>(`/api/orders/${orderNo}/status`, { status: newStatus });
   }
 }
