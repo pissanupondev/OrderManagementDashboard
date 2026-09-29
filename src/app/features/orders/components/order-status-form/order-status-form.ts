@@ -11,13 +11,14 @@ import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validatio
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrderStatusForm implements OnInit, OnChanges {
-@Input({ required: true }) currentStatus: string = '';
-  @Input() isLoading: boolean = false;
+    @Input({ required: true }) currentStatus: string = '';
+  @Input() isLoading = false;
+
   @Input() statusOptions: StatusOption[] = [
-    { value: 'pending', label: 'รอการจัดส่ง' },
-    { value: 'shipped', label: 'จัดส่งแล้ว' },
-    { value: 'delivered', label: 'สำเร็จ' },
-    { value: 'cancelled', label: 'ยกเลิก' }
+    { value: 'รอการจัดส่ง', label: 'รอการจัดส่ง' },
+    { value: 'ชำระเงินแล้ว', label: 'ชำระเงินแล้ว' },
+    { value: 'ส่งของแล้ว', label: 'ส่งของแล้ว' },
+    { value: 'ยกเลิกคำสั่งซื้อ', label: 'ยกเลิกคำสั่งซื้อ' }
   ];
 
   @Output() formSubmit = new EventEmitter<StatusFormPayload>();
@@ -34,44 +35,69 @@ export class OrderStatusForm implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['currentStatus'] && this.form) {
-      this.form.get('status')?.setValue(this.currentStatus);
-      this.form.get('status')?.updateValueAndValidity();
+      const statusControl = this.form.get('status');
+
+      statusControl?.setValue(this.currentStatus);
+      statusControl?.updateValueAndValidity();
     }
   }
 
   private buildForm(): void {
     this.form = this.fb.group({
       status: [
-        this.currentStatus, 
-        [Validators.required, this.cannotBeSameStatus.bind(this)]
+        this.currentStatus,
+        [
+          Validators.required,
+          this.cannotBeSameStatus.bind(this)
+        ]
       ],
-      remark: ['', [Validators.maxLength(200)]]
+      remark: [
+        '',
+        [Validators.maxLength(200)]
+      ]
     });
   }
 
-  private cannotBeSameStatus(control: AbstractControl): ValidationErrors | null {
-    if (control.value && control.value.toLowerCase() === this.currentStatus?.toLowerCase()) {
+  private cannotBeSameStatus(
+    control: AbstractControl
+  ): ValidationErrors | null {
+
+    if (
+      control.value &&
+      control.value.toLowerCase() === this.currentStatus?.toLowerCase()
+    ) {
       return { sameStatus: true };
     }
+
     return null;
   }
 
-  get statusControl() { return this.form.get('status'); }
-  get remarkControl() { return this.form.get('remark'); }
+  get statusControl(): AbstractControl | null {
+    return this.form?.get('status') ?? null;
+  }
+
+  get remarkControl(): AbstractControl | null {
+    return this.form?.get('remark') ?? null;
+  }
 
   onSubmit(): void {
     this.isSubmitted = true;
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+
     this.formSubmit.emit(this.form.value as StatusFormPayload);
   }
 
   onCancel(): void {
-    this.form.reset({ status: this.currentStatus, remark: '' });
+    this.form.reset({
+      status: this.currentStatus,
+      remark: ''
+    });
+
     this.isSubmitted = false;
     this.formCancel.emit();
   }
-
 }

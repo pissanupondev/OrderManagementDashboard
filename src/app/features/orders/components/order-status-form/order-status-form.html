@@ -1,22 +1,24 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="status-form">
   <div class="form-group">
     <label for="statusSelect" class="form-label">เลือกสถานะใหม่</label>
-    <select 
-      id="statusSelect" 
-      formControlName="status" 
-      class="form-select"
-      [class.is-invalid]="statusControl?.invalid && (statusControl?.touched || isSubmitted)"
-    >
+    <select id="statusSelect" formControlName="status" class="form-select"
+      [class.is-invalid]="statusControl?.invalid && (statusControl?.touched || isSubmitted)">
       <option value="" disabled>-- กรุณาเลือกสถานะ --</option>
-      <option *ngFor="let opt of statusOptions" [value]="opt.value">
+
+      @for (opt of statusOptions; track opt.value) {
+      <option [value]="opt.value">
         {{ opt.label }}
       </option>
+      }
     </select>
+    @if (statusControl?.invalid && (statusControl?.touched || isSubmitted)) {
+    <div class="error-msg">
+      @if (statusControl?.errors?.['sameStatus']) {
+      <small>* สถานะที่เลือกเป็นสถานะปัจจุบันอยู่แล้ว</small>
+      }
 
-    <div *ngIf="statusControl?.invalid && (statusControl?.touched || isSubmitted)" class="error-msg">
-      <small *ngIf="statusControl?.errors?.['required']">* กรุณาเลือกสถานะ</small>
-      <small *ngIf="statusControl?.errors?.['sameStatus']">* สถานะที่เลือกเป็นสถานะปัจจุบันอยู่แล้ว</small>
     </div>
+    }
   </div>
 
   <div class="form-actions">
