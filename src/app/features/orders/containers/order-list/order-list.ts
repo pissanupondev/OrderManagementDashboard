@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { OrderService } from '../../services/order.service';
 import { OrderFilterState, OrderItem, StatusFormPayload } from '../../models/order.model';
 import { OrderTable } from '../../components/order-table/order-table';
@@ -6,6 +6,9 @@ import { CommonModule } from '@angular/common';
 import { OrderFilter } from '../../components/order-filter/order-filter';
 import { calculateTotalPrice, groupByKey } from '../../../../shared/ีutils/order.utils';
 import { OrderStatusModal } from '../../components/order-status-modal/order-status-modal';
+import { FormControl } from '@angular/forms';
+import { catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   imports: [CommonModule,OrderTable,OrderFilter,OrderStatusModal],
@@ -13,30 +16,29 @@ import { OrderStatusModal } from '../../components/order-status-modal/order-stat
   styleUrl: './order-list.css',
   templateUrl: './order-list.html',
 })
-export class OrderList {
-  private orderService = inject(OrderService);
+export class OrderList implements OnInit{
+ private orderService = inject(OrderService);
+  private destroyRef = inject(DestroyRef);
 
-  // 1. Raw Data จาก API
+  searchControl = new FormControl('');
+
   allOrders = signal<OrderItem[]>([]);
   isLoading = signal<boolean>(true);
+  errorMessage = signal<string>('');
 
-  // 2. Filter State
   filterState = signal<OrderFilterState>({
     status: 'ทั้งหมด',
     startDate: '',
     endDate: ''
   });
 
-  // 3. Pagination State
   currentPage = signal<number>(1);
   pageSize = signal<number>(10);
 
-  // 4. Modal & Update Status State (ส่วนที่เพิ่มใหม่)
   isModalOpen = signal<boolean>(false);
   selectedOrder = signal<OrderItem | null>(null);
   isUpdatingStatus = signal<boolean>(false);
-
-  // 5. Computed Properties ต่างๆ
+  
   filteredOrders = computed(() => {
     const orders = this.allOrders();
     const { status, startDate, endDate } = this.filterState();
@@ -46,7 +48,7 @@ export class OrderList {
 
       let matchDate = true;
       if (startDate || endDate) {
-        const itemDate = new Date(item.orderDate).getTime();
+        const itemDate = new Date(item.orderDate || '').getTime();
         const start = startDate ? new Date(startDate).getTime() : -Infinity;
         const end = endDate ? new Date(endDate).getTime() : Infinity;
         
@@ -80,10 +82,60 @@ export class OrderList {
   });
 
   ngOnInit(): void {
+    this.initSearchStream();
     this.loadOrders();
   }
 
-  // Handlers สำหรับ Modal & Status Update (ส่วนที่เพิ่มใหม่)
+  /**
+   * ค้นหาคำสั่งซื้อแบบตัด Request เก่าด้วย switchMap + debounceTime 300ms
+   */
+  private initSearchStream(): void {
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(() => {
+        this.isLoading.set(true);
+        this.errorMessage.set('');
+      }),
+      switchMap(query => 
+        this.orderService.getOrders().pipe(
+          catchError(err => {
+            this.errorMessage.set(err.message || 'ไม่สามารถโหลดข้อมูลได้');
+            return of([]); // คืน Array ว่างเพื่อไม่ให้ Stream พัง
+          })
+        )
+      ),
+      tap(() => this.isLoading.set(false)),
+      takeUntilDestroyed(this.destroyRef) // ป้องกัน Memory Leak
+    ).subscribe(data => {
+      this.allOrders.set(data);
+      this.currentPage.set(1); // รีเซ็ตไปหน้าแรกเมื่อค้นหา
+    });
+  }
+
+  /**
+   * โหลดคำสั่งซื้อทั้งหมด
+   */
+  private loadOrders(): void {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.orderService.getOrders().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (data) => {
+        this.allOrders.set(data);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading order list:', err);
+        this.errorMessage.set(err.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  // Handlers สำหรับ Modal & Status Update
   onOpenStatusModal(order: OrderItem): void {
     this.selectedOrder.set(order);
     this.isModalOpen.set(true);
@@ -98,11 +150,16 @@ export class OrderList {
   onSaveStatus(event: { id: string; payload: StatusFormPayload }): void {
     this.isUpdatingStatus.set(true);
 
-    this.orderService.updateOrderStatus(event.id, event.payload.status).subscribe({
+    this.orderService.updateOrderStatus(event.id, event.payload.status).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (updatedOrder) => {
-        // อัปเดตข้อมูลใน Signal allOrders เพื่อให้ UI ล่าสุดแสดงผลทันที
         this.allOrders.update(orders =>
-          orders.map(item => item.orderNo === updatedOrder.orderDate ? { ...item, status: updatedOrder.status } : item)
+          orders.map(item => 
+            (item.orderNo === updatedOrder.orderNo || item.orderNo === event.id) 
+              ? { ...item, status: updatedOrder.status } 
+              : item
+          )
         );
 
         this.isUpdatingStatus.set(false);
@@ -110,13 +167,12 @@ export class OrderList {
       },
       error: (err) => {
         console.error('Error updating status:', err);
-        alert(err.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+        this.errorMessage.set(err.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ');
         this.isUpdatingStatus.set(false);
       }
     });
   }
 
-  // Handlers เดิม...
   onFilterChange(filters: OrderFilterState): void {
     this.filterState.set(filters);
     this.currentPage.set(1);
@@ -124,24 +180,12 @@ export class OrderList {
 
   onFilterReset(): void {
     this.filterState.set({ status: 'ทั้งหมด', startDate: '', endDate: '' });
+    this.searchControl.setValue('', { emitEvent: false }); // ล้างช่องค้นหาโดยไม่ยิง Event ซ้ำ
     this.currentPage.set(1);
+    this.loadOrders();
   }
 
   onPageChange(newPage: number): void {
     this.currentPage.set(newPage);
-  }
-
-  private loadOrders(): void {
-    this.isLoading.set(true);
-    this.orderService.getOrders().subscribe({
-      next: (data) => {
-        this.allOrders.set(data);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Error loading order list:', err);
-        this.isLoading.set(false);
-      }
-    });
   }
 }

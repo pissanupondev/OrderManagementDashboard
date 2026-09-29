@@ -12,8 +12,7 @@
     <span>ยอดรวมสุทธิทั้งหมด (ตามเงื่อนไขค้นหา): </span>
     <strong>{{ totalNetAmount() | number:'1.2-2' }} THB</strong>
   </div>
-
-  <!-- 🟢 ดักฟัง (editStatus) เพื่อเรียก onOpenStatusModal($event) -->
+  
   <app-order-table 
     [orders]="displayedOrders()" 
     [isLoading]="isLoading()" 

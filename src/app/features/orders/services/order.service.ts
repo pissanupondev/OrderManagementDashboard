@@ -19,10 +19,8 @@ export class OrderService {
     return this.http.get<OrderItem[]>('/api/orders');
   }
 
-  // 🟢 เพิ่มเมธอดอัปเดตสถานะรายการสั่งซื้อ
   updateOrderStatus(orderNo: string, newStatus: string): Observable<OrderItem> {
     if (this.isMockMode) {
-      // ค้นหารายการใน MOCK_ORDERS และจำลองการอัปเดต
       const targetOrder = MOCK_ORDERS.find(item => item.orderNo === orderNo || String(item.no) === orderNo);
       
       if (targetOrder) {
