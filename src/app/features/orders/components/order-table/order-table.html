@@ -1,15 +1,15 @@
 <!-- สถานะกำลังโหลดข้อมูล (Loading State) -->
 @if (isLoading()) {
-  <div class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">กำลังโหลด...</span>
-    </div>
+  <div class="text-center py-5" role="status" aria-live="polite">
+    <div class="spinner-border text-primary" aria-hidden="true"></div>
+    <span class="visually-hidden">กำลังโหลดข้อมูลรายการสั่งซื้อ...</span>
     <p class="mt-2 text-muted">กำลังโหลดข้อมูลรายการสั่งซื้อ...</p>
   </div>
 } @else {
-  <!-- แสดงผลเป็น Table บนหน้าจอ Desktop (1440px) และ Tablet (768px) -->
+  <!-- แสดงผลเป็น Table บนหน้าจอ Desktop และ Tablet -->
   <div class="table-responsive d-none d-md-block">
     <table class="table table-bordered table-striped align-middle custom-table">
+      <caption class="visually-hidden">รายการสั่งซื้อย้อนหลัง</caption>
       <thead>
         <tr class="text-center">
           <th scope="col" class="text-center">ลำดับ</th>
@@ -28,12 +28,16 @@
       </thead>
       <tbody>
         @for (item of orders(); track item.no) {
-          <!-- 🟢 เพิ่ม (click) และ style cursor: pointer -->
+          <!-- 🟢 ปรับปรุงให้รองรับ Keyboard & Screen Reader -->
           <tr 
-            (click)="onSelectOrder(item)" 
+            (click)="onSelectOrder(item)"
+            (keydown.enter)="onSelectOrder(item)"
+            (keydown.space)="$event.preventDefault(); onSelectOrder(item)"
             class="clickable-row" 
             style="cursor: pointer;"
-            title="คลิกเพื่ออัปเดตสถานะ"
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="'รายการสั่งซื้อที่ ' + item.orderNo + ' จากร้าน ' + item.shopName + ' คลิกเพื่ออัปเดตสถานะ'"
           >
             <td class="text-center">{{ item.no }}</td>
             <td>{{ item.shopName }}</td>
@@ -59,21 +63,26 @@
     </table>
   </div>
 
-  <!-- แสดงผลเป็น Card View บนหน้าจอมือถือขนาดเล็ก (360px) -->
-  <div class="d-md-none">
+  <!-- แสดงผลเป็น Card View บนหน้าจอมือถือ -->
+  <div class="d-md-none" role="feed" aria-label="รายการสั่งซื้อ">
     @for (item of orders(); track item.no) {
-      <!-- 🟢 เพิ่ม (click) และ style cursor: pointer ที่ระดับ Card -->
-      <div 
+      <!-- 🟢 ปรับปรุง Card ให้เป็น Interactive Element -->
+      <article 
         class="card mb-3 shadow-sm border-0 clickable-card" 
-        (click)="onSelectOrder(item)" 
+        (click)="onSelectOrder(item)"
+        (keydown.enter)="onSelectOrder(item)"
+        (keydown.space)="$event.preventDefault(); onSelectOrder(item)"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="'รายการสั่งซื้อ ' + item.orderNo + ' ร้าน ' + item.shopName + ' คลิกเพื่ออัปเดตสถานะ'"
         style="cursor: pointer;"
       >
-        <div class="card-header bg-custom-header text-white d-flex justify-content-between align-items-center">
+        <header class="card-header bg-custom-header text-white d-flex justify-content-between align-items-center">
           <span class="fw-bold">ร้าน - {{ item.shopName }}</span>
           <span class="badge" [ngClass]="getStatusClass(item.status)">{{ item.status }}</span>
-        </div>
+        </header>
         <div class="card-body">
-          <h6 class="card-title text-primary fw-bold mb-2">{{ item.productName }}</h6>
+          <h3 class="card-title h6 text-primary fw-bold mb-2">{{ item.productName }}</h3>
           <p class="card-text text-muted small mb-2">
             <strong>ตัวเลือกสินค้า:</strong> {{ item.variant }}
           </p>
@@ -88,11 +97,11 @@
             <div class="col-6"><strong>ส่วนลด:</strong> {{ item.discount | number:'1.2-2' }} บาท</div>
           </div>
         </div>
-        <div class="card-footer bg-light text-end">
+        <footer class="card-footer bg-light text-end">
           <span class="fw-bold text-dark">รวมสุทธิ: </span>
           <span class="fw-bold text-success fs-6">{{ item.netTotal | number:'1.2-2' }} บาท</span>
-        </div>
-      </div>
+        </footer>
+      </article>
     } @empty {
       <div class="text-center py-4 text-muted">ไม่พบข้อมูลรายการสั่งซื้อ</div>
     }
