@@ -5,7 +5,6 @@
     <p class="mt-2 text-muted">กำลังโหลดข้อมูลรายการสั่งซื้อ...</p>
   </div>
 } @else {
-  <!-- แสดงผลเป็น Table บนหน้าจอ Desktop และ Tablet -->
   <div class="table-responsive d-none d-md-block">
     <table class="table table-bordered table-striped align-middle custom-table">
       <caption class="visually-hidden">รายการสั่งซื้อย้อนหลัง</caption>
@@ -27,7 +26,6 @@
       </thead>
       <tbody>
         @for (item of orders(); track item.no) {
-          <!-- 🟢 ปรับปรุงให้รองรับ Keyboard & Screen Reader -->
           <tr 
             (click)="onSelectOrder(item)"
             (keydown.enter)="onSelectOrder(item)"
@@ -62,10 +60,8 @@
     </table>
   </div>
 
-  <!-- แสดงผลเป็น Card View บนหน้าจอมือถือ -->
   <div class="d-md-none" role="feed" aria-label="รายการสั่งซื้อ">
     @for (item of orders(); track item.no) {
-      <!-- 🟢 ปรับปรุง Card ให้เป็น Interactive Element -->
       <article 
         class="card mb-3 shadow-sm border-0 clickable-card" 
         (click)="onSelectOrder(item)"
