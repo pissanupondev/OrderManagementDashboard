@@ -6,8 +6,6 @@ import { CommonModule } from '@angular/common';
 import { OrderFilter } from '../../components/order-filter/order-filter';
 import { calculateTotalPrice, groupByKey } from '../../../../shared/ีutils/order.utils';
 import { OrderStatusModal } from '../../components/order-status-modal/order-status-modal';
-import { FormControl } from '@angular/forms';
-import { catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -17,10 +15,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   templateUrl: './order-list.html',
 })
 export class OrderList implements OnInit{
- private orderService = inject(OrderService);
+  private orderService = inject(OrderService);
   private destroyRef = inject(DestroyRef);
-
-  searchControl = new FormControl('');
 
   allOrders = signal<OrderItem[]>([]);
   isLoading = signal<boolean>(true);
@@ -69,45 +65,12 @@ export class OrderList implements OnInit{
     return this.filteredOrders().slice(start, start + this.pageSize());
   });
 
-  groupedDisplayedOrders = computed(() => {
-    return groupByKey(this.displayedOrders(), 'orderNo'); 
-  });
-
   totalNetAmount = computed(() => {
     return calculateTotalPrice(this.filteredOrders(), 'totalAmount');
   });
 
-  pageNetAmount = computed(() => {
-    return calculateTotalPrice(this.displayedOrders(), 'totalAmount');
-  });
-
   ngOnInit(): void {
-    // this.initSearchStream();
     this.loadOrders();
-  }
-
-  private initSearchStream(): void {
-    this.searchControl.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      tap(() => {
-        this.isLoading.set(true);
-        this.errorMessage.set('');
-      }),
-      switchMap(query => 
-        this.orderService.getOrders().pipe(
-          catchError(err => {
-            this.errorMessage.set(err.message || 'ไม่สามารถโหลดข้อมูลได้');
-            return of([]); // คืน Array ว่างเพื่อไม่ให้ Stream พัง
-          })
-        )
-      ),
-      tap(() => this.isLoading.set(false)),
-      takeUntilDestroyed(this.destroyRef) 
-    ).subscribe(data => {
-      this.allOrders.set(data);
-      this.currentPage.set(1); 
-    });
   }
 
   private loadOrders(): void {
@@ -129,7 +92,6 @@ export class OrderList implements OnInit{
     });
   }
 
-  // Handlers สำหรับ Modal & Status Update
   onOpenStatusModal(order: OrderItem): void {
     this.selectedOrder.set(order);
     this.isModalOpen.set(true);
@@ -174,7 +136,6 @@ export class OrderList implements OnInit{
 
   onFilterReset(): void {
     this.filterState.set({ status: 'ทั้งหมด', startDate: '', endDate: '' });
-    this.searchControl.setValue('', { emitEvent: false });
     this.currentPage.set(1);
     this.loadOrders();
   }
