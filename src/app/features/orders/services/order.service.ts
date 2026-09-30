@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { OrderItem, PaginationParams } from '../models/order.model';
+import { OrderFilterState, OrderItem, PaginationParams } from '../models/order.model';
 import { MOCK_ORDERS } from '../mocks/order.mock';
 
 @Injectable({
@@ -12,7 +12,7 @@ export class OrderService {
   private http = inject(HttpClient);
   private isMockMode = true;
 
-  getOrders(): Observable<OrderItem[]> {
+  getOrders(filters: OrderFilterState): Observable<OrderItem[]> {
     if (this.isMockMode) {
       return of(MOCK_ORDERS).pipe(delay(400));
     }

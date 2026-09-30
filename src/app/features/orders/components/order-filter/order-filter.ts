@@ -19,12 +19,14 @@ export class OrderFilter {
   filterChange = output<OrderFilterState>();
   resetFilter = output<void>();
 
+  keyword = '';
   selectedStatus: OrderStatusType = 'ทั้งหมด';
   startDate = '';
   endDate = '';
 
   onSearch(): void {
     this.filterChange.emit({
+      keyword: this.keyword,
       status: this.selectedStatus,
       startDate: this.startDate,
       endDate: this.endDate
@@ -32,9 +34,11 @@ export class OrderFilter {
   }
 
   onReset(): void {
+    this.keyword = '';
     this.selectedStatus = 'ทั้งหมด';
     this.startDate = '';
     this.endDate = '';
+    this.onSearch();
     this.resetFilter.emit();
   }
 }

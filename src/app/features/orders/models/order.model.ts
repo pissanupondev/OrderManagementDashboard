@@ -16,6 +16,7 @@ export interface OrderItem {
 export type OrderStatusType = 'ชำระเงินแล้ว' | 'ส่งของแล้ว' | 'ยกเลิกคำสั่งซื้อ' | 'ทั้งหมด' | string;
 
 export interface OrderFilterState {
+  keyword: string;
   status: OrderStatusType;
   startDate: string;
   endDate: string;
