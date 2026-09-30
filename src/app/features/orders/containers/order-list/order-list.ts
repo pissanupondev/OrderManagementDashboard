@@ -10,12 +10,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap, tap } from 'rxjs';
 
 @Component({
-  imports: [CommonModule,OrderTable,OrderFilter,OrderStatusModal],
+  imports: [CommonModule, OrderTable, OrderFilter, OrderStatusModal],
   selector: 'app-order-list',
   styleUrl: './order-list.css',
   templateUrl: './order-list.html',
 })
-export class OrderList implements OnInit{
+export class OrderList implements OnInit {
   private orderService = inject(OrderService);
   private destroyRef = inject(DestroyRef);
 
@@ -29,7 +29,7 @@ export class OrderList implements OnInit{
     keyword: '',
     status: 'ทั้งหมด',
     startDate: '',
-    endDate: ''
+    endDate: '',
   });
 
   currentPage = signal<number>(1);
@@ -38,21 +38,21 @@ export class OrderList implements OnInit{
   isModalOpen = signal<boolean>(false);
   selectedOrder = signal<OrderItem | null>(null);
   isUpdatingStatus = signal<boolean>(false);
-  
+
   filteredOrders = computed(() => {
     const orders = this.allOrders();
     const { keyword, status, startDate, endDate } = this.filterState(); // 👈 ดึง keyword เพิ่มเติม
 
-    return orders.filter(item => {
+    return orders.filter((item) => {
       // 1. ค้นหาจาก Keyword (ร้าน, หมายเลขสั่งซื้อ, รายการ )
       const cleanKeyword = keyword.trim().toLowerCase();
       let matchKeyword = true;
       if (cleanKeyword) {
-        matchKeyword = 
+        matchKeyword =
           (item.orderNo?.toLowerCase().includes(cleanKeyword) ?? false) ||
           (item.shopName?.toLowerCase().includes(cleanKeyword) ?? false) ||
-          (item.productName?.toLowerCase().includes(cleanKeyword) ?? false) 
-          // (item.variant?.toLowerCase().includes(cleanKeyword) ?? false);
+          (item.productName?.toLowerCase().includes(cleanKeyword) ?? false);
+        // (item.variant?.toLowerCase().includes(cleanKeyword) ?? false);
       }
 
       // 2. ค้นหาจาก สถานะ
@@ -65,7 +65,7 @@ export class OrderList implements OnInit{
         const start = startDate ? new Date(startDate).getTime() : -Infinity;
         // กำหนดเวลาสิ้นสุดให้ครอบคลุมทั้งวัน (23:59:59.999)
         const end = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : Infinity;
-        
+
         matchDate = itemDate >= start && itemDate <= end;
       }
 
@@ -84,7 +84,7 @@ export class OrderList implements OnInit{
   });
 
   totalNetAmount = computed(() => {
-    return calculateTotalPrice(this.filteredOrders(), 'totalAmount');
+    return calculateTotalPrice(this.filteredOrders(), 'netTotal');
   });
 
   ngOnInit(): void {
@@ -116,27 +116,29 @@ export class OrderList implements OnInit{
   // }
 
   private setupFilterStream(): void {
-    this.filter$.pipe(
-      tap(() => {
-        this.isLoading.set(true);
-        this.errorMessage.set('');
-      }),
-      debounceTime(300),
-      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
-      switchMap(filters => 
-        this.orderService.getOrders(filters).pipe(
-          catchError((err: Error) => {
-            this.errorMessage.set(err.message);
-            this.isLoading.set(false);
-            return of([]);
-          })
-        )
-      ),
-      takeUntilDestroyed(this.destroyRef) 
-    ).subscribe(orders => {
-      this.allOrders.set(orders);
-      this.isLoading.set(false);
-    });
+    this.filter$
+      .pipe(
+        tap(() => {
+          this.isLoading.set(true);
+          this.errorMessage.set('');
+        }),
+        debounceTime(300),
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
+        switchMap((filters) =>
+          this.orderService.getOrders(filters).pipe(
+            catchError((err: Error) => {
+              this.errorMessage.set(err.message);
+              this.isLoading.set(false);
+              return of([]);
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((orders) => {
+        this.allOrders.set(orders);
+        this.isLoading.set(false);
+      });
   }
 
   onOpenStatusModal(order: OrderItem): void {
@@ -153,27 +155,28 @@ export class OrderList implements OnInit{
   onSaveStatus(event: { id: string; payload: StatusFormPayload }): void {
     this.isUpdatingStatus.set(true);
 
-    this.orderService.updateOrderStatus(event.id, event.payload.status).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (updatedOrder) => {
-        this.allOrders.update(orders =>
-          orders.map(item => 
-            (item.orderNo === updatedOrder.orderNo || item.orderNo === event.id) 
-              ? { ...item, status: updatedOrder.status } 
-              : item
-          )
-        );
+    this.orderService
+      .updateOrderStatus(event.id, event.payload.status)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updatedOrder) => {
+          this.allOrders.update((orders) =>
+            orders.map((item) =>
+              item.orderNo === updatedOrder.orderNo || item.orderNo === event.id
+                ? { ...item, status: updatedOrder.status }
+                : item,
+            ),
+          );
 
-        this.isUpdatingStatus.set(false);
-        this.onCloseStatusModal();
-      },
-      error: (err) => {
-        console.error('Error updating status:', err);
-        this.errorMessage.set(err.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ');
-        this.isUpdatingStatus.set(false);
-      }
-    });
+          this.isUpdatingStatus.set(false);
+          this.onCloseStatusModal();
+        },
+        error: (err) => {
+          console.error('Error updating status:', err);
+          this.errorMessage.set(err.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+          this.isUpdatingStatus.set(false);
+        },
+      });
   }
 
   onFilterChange(filters: OrderFilterState): void {
@@ -183,9 +186,24 @@ export class OrderList implements OnInit{
   }
 
   onFilterReset(): void {
-    this.filterState.set({ keyword: '',status: 'ทั้งหมด', startDate: '', endDate: '' });
-    this.currentPage.set(1);
-    this.triggerSearch();
+    const current = this.filterState();
+    const hasFilter =
+      current.keyword.trim() !== '' ||
+      current.status !== 'ทั้งหมด' ||
+      current.startDate !== '' ||
+      current.endDate !== '';
+
+    // ถ้ามีค่ากรอกอยู่ค่อย รีเซ็ต และ ยิงดึงข้อมูลใหม่
+    if (hasFilter) {
+      this.filterState.set({
+        keyword: '',
+        status: 'ทั้งหมด',
+        startDate: '',
+        endDate: '',
+      });
+      this.currentPage.set(1);
+      this.triggerSearch();
+    }
   }
 
   onPageChange(newPage: number): void {

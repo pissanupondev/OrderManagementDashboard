@@ -38,7 +38,6 @@ export class OrderFilter {
     this.selectedStatus = 'ทั้งหมด';
     this.startDate = '';
     this.endDate = '';
-    this.onSearch();
     this.resetFilter.emit();
   }
 }
