@@ -82,13 +82,10 @@ export class OrderList implements OnInit{
   });
 
   ngOnInit(): void {
-    this.initSearchStream();
+    // this.initSearchStream();
     this.loadOrders();
   }
 
-  /**
-   * ค้นหาคำสั่งซื้อแบบตัด Request เก่าด้วย switchMap + debounceTime 300ms
-   */
   private initSearchStream(): void {
     this.searchControl.valueChanges.pipe(
       debounceTime(300),
@@ -106,16 +103,13 @@ export class OrderList implements OnInit{
         )
       ),
       tap(() => this.isLoading.set(false)),
-      takeUntilDestroyed(this.destroyRef) // ป้องกัน Memory Leak
+      takeUntilDestroyed(this.destroyRef) 
     ).subscribe(data => {
       this.allOrders.set(data);
-      this.currentPage.set(1); // รีเซ็ตไปหน้าแรกเมื่อค้นหา
+      this.currentPage.set(1); 
     });
   }
 
-  /**
-   * โหลดคำสั่งซื้อทั้งหมด
-   */
   private loadOrders(): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
@@ -180,7 +174,7 @@ export class OrderList implements OnInit{
 
   onFilterReset(): void {
     this.filterState.set({ status: 'ทั้งหมด', startDate: '', endDate: '' });
-    this.searchControl.setValue('', { emitEvent: false }); // ล้างช่องค้นหาโดยไม่ยิง Event ซ้ำ
+    this.searchControl.setValue('', { emitEvent: false });
     this.currentPage.set(1);
     this.loadOrders();
   }

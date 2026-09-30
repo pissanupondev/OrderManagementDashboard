@@ -3,31 +3,28 @@
     <h1 class="h4 fw-bold mb-0">ประวัติและรายการสั่งซื้อ</h1>
   </header>
 
-  <app-order-filter 
-    (filterChange)="onFilterChange($event)" 
-    (resetFilter)="onFilterReset()">
+  <app-order-filter (filterChange)="onFilterChange($event)" (resetFilter)="onFilterReset()">
   </app-order-filter>
 
-  <div class="summary-card my-4 text-end">
-    <span>ยอดรวมสุทธิทั้งหมด (ตามเงื่อนไขค้นหา): </span>
-    <strong>{{ totalNetAmount() | number:'1.2-2' }} THB</strong>
-  </div>
-  
-  <app-order-table 
-    [orders]="displayedOrders()" 
-    [isLoading]="isLoading()" 
-    [currentPage]="currentPage()"
-    [totalPages]="totalPages()" 
-    (pageChange)="onPageChange($event)"
-    (editStatus)="onOpenStatusModal($event)">
-  </app-order-table>
+  <section class="summary-card my-4 text-end" aria-labelledby="order-summary-title">
+    <h2 id="order-summary-title" class="visually-hidden">
+      สรุปยอดรวมรายการสั่งซื้อ
+    </h2>
+    <dl class="mb-0">
+      <dt class="d-inline">
+        ยอดรวมสุทธิทั้งหมด (ตามเงื่อนไขค้นหา)
+      </dt>
+      <dd class="d-inline ms-2 fw-bold">
+        {{ totalNetAmount() | number:'1.2-2' }} THB
+      </dd>
+    </dl>
+  </section>
 
-  <!-- 🟢 แสดง Modal Form เมื่อกดเลือก Record -->
-  <app-order-status-modal
-    [isOpen]="isModalOpen()"
-    [order]="selectedOrder()"
-    [isLoading]="isUpdatingStatus()"
-    (save)="onSaveStatus($event)"
-    (close)="onCloseStatusModal()">
+  <app-order-table [orders]="displayedOrders()" [isLoading]="isLoading()" [currentPage]="currentPage()"
+    [totalPages]="totalPages()" (pageChange)="onPageChange($event)" (editStatus)="onOpenStatusModal($event)">
+  </app-order-table>
+  
+  <app-order-status-modal [isOpen]="isModalOpen()" [order]="selectedOrder()" [isLoading]="isUpdatingStatus()"
+    (save)="onSaveStatus($event)" (close)="onCloseStatusModal()">
   </app-order-status-modal>
 </main>
